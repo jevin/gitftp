@@ -24,7 +24,7 @@ upload_file()
 {
 	let COUNT=COUNT+1
 	echo "Uploading $FILE_PATH"
-	curl --ftp-create-dirs --upload-file $FILE_PATH --user $USER:$PASSWORD $HOST$FILE_PATH #> /dev/null 2>&1
+	curl --ftp-create-dirs --upload-file $FILE_PATH --user $USER:$PASSWORD $HOST$FILE_PATH > /dev/null 2>&1
  }
 
 ## Actual Code
