@@ -1,0 +1,98 @@
+#!/bin/bash
+
+## Variables
+PROJECTS_PATH=`dirname $(readlink -f "$0")`"/projects"
+PROJECT=${PWD##*/}
+
+## Functions
+save_config()
+{
+	echo "USER=$USER" > $PROJECTS_PATH"/$PROJECT.config"
+	echo "PASSWORD=$PASSWORD" >> $PROJECTS_PATH"/$PROJECT.config"
+	echo "HOST=$HOST" >> $PROJECTS_PATH"/$PROJECT.config"
+}
+
+load_config()
+{
+	while read VARIABLE_NAME
+	do
+		export ${VARIABLE_NAME%=*}=${VARIABLE_NAME#*=}
+	done < $PROJECTS_PATH"/$PROJECT.config"
+}
+
+upload_file()
+{
+	let COUNT=COUNT+1
+	echo "Uploading $FILE_PATH"
+	curl --ftp-create-dirs --upload-file $FILE_PATH --user $USER:$PASSWORD $HOST$FILE_PATH #> /dev/null 2>&1
+ }
+
+## Actual Code
+case "$1" in 
+	init)
+		USER=$2
+		PASSWORD=$3
+		HOST=$4
+
+		save_config
+
+		echo "Project initialized!"
+		;;
+
+	stage)
+		git status --porcelain > $PROJECTS_PATH"/$PROJECT.status.raw"
+		echo "" > $PROJECTS_PATH"/$PROJECT.status"
+
+		while read FILE_STATUS
+		do
+			if [ "${FILE_STATUS%\ *}" != "D" ]; then
+				echo "${FILE_STATUS##*\ }" >> $PROJECTS_PATH"/$PROJECT.status"
+				echo "Staged ${FILE_STATUS##*\ }"
+			fi
+		done < $PROJECTS_PATH"/$PROJECT.status.raw"
+
+		rm $PROJECTS_PATH"/$PROJECT.status.raw"
+		;;
+
+	push)
+		COUNT=0
+
+		load_config
+
+		if [ "$2" == "" ]; then
+			while read FILE_PATH
+			do
+				if [ "$FILE_PATH" != "" ]; then
+					upload_file
+				fi
+			done < $PROJECTS_PATH"/$PROJECT.status"
+		else
+			FILE_PATH="$2"
+			echo "Ancient chinese secret!"
+			upload_file
+		fi
+
+		echo ""
+		echo "$COUNT file(s) have been transfered!"
+		;;
+
+	*)
+		echo "           \|/     "
+		echo "          .-*-     "
+		echo "         / /|\     "
+		echo "        _L_        "
+		echo "      ,"   ".      "
+		echo "  (\ /  O O  \ /)  "
+		echo "   \|    _    |/   "
+		echo "     \  (_)  /     "
+		echo "     _/.___,\_     "
+		echo "    (_/     \_)    "
+		echo ""
+		echo " What have you done ?"
+		echo ""
+		echo "It was supposed to be as simple as this :"
+		echo "1. gitftp init ftp_user ftp_password ftp://127.0.0.1/www/"
+		echo "2. gitftp stage"
+		echo "3. gitftp push"
+		;;
+esac
