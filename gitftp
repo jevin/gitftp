@@ -74,6 +74,8 @@ case "$1" in
 
 		echo ""
 		echo "$COUNT file(s) have been transfered!"
+		# If you're using OSX, try uncommenting the following line
+		# say boom
 		;;
 
 	*)
